@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * memory.h
  *
  *  Created on: 2013-6-6
@@ -84,32 +84,32 @@ enum memPartition {
 
 
 struct memBlock {
-	enum memPartition partition;           /* Partition IDºÅ       */
-	struct memBlock  *pNext;               /* Ö¸ÏòÏÂÒ»¸ö½Úµã*/
-	unsigned int index;                    /* ÄÚ´æ¿é±àºÅ*/
-	enum memState state;                   /* Ö¸Ê¾ÄÚ´æ×´Ì¬*/
-	unsigned int taskId;                   /* µ±Ç°Ê¹ÓÃÄÚ´æµÄÈÎÎñid*/
-	unsigned int length;                   /* ÉêÇëµÄ³¤¶È*/
-	void *pMemory;                         /* Êµ¼ÊÄÚ´æµØÖ·*/
+	enum memPartition partition;           /* Partition IDå·       */
+	struct memBlock  *pNext;               /* æŒ‡å‘ä¸‹ä¸€ä¸ªèŠ‚ç‚¹*/
+	unsigned int index;                    /* å†…å­˜å—ç¼–å·*/
+	enum memState state;                   /* æŒ‡ç¤ºå†…å­˜çŠ¶æ€*/
+	unsigned int taskId;                   /* å½“å‰ä½¿ç”¨å†…å­˜çš„ä»»åŠ¡id*/
+	unsigned int length;                   /* ç”³è¯·çš„é•¿åº¦*/
+	void *pMemory;                         /* å®é™…å†…å­˜åœ°å€*/
 };
 
 struct memControlBlock {
-	enum memPartition partition;   /* Partition IDºÅ       */
-	unsigned int totalBlocks;      /* ¸ÃPartitionÇøµÄ¿é¸öÊı*/
-	unsigned int size;             /* Ã¿¸ö¿éµÄ´óĞ¡         */
-	unsigned int totalSize;        /* ·ÖÅäÇøÓò´óĞ¡*/
-	unsigned int usedBlocks;       /* ÒÑÊ¹ÓÃµÄ¿éÊı*/
-	unsigned int freeBlocks;       /* Î´Ê¹ÓÃµÄ¿éÊı*/
-	unsigned int badBlocks;        /* ÒÑ·¢ÏÖµÄËğ»µµÄÄÚ´æ¿é¸öÊı£¬*/
-	unsigned int reReleaseBlocks;  /* ÖØ¸´ÊÍ·ÅµÄ¿é*/
-	unsigned int unUsedBlocks;     /* ´ÓÎ´Ê¹ÓÃµÄ¿éÊı*/
-	unsigned int usedTimes;        /* ·ÖÅä´ÎÊı*/
-	unsigned int freeTimes;        /* ÊÍ·Å´ÎÊı*/
-	struct memBlock *pHead;        /* Ö¸Ïò±¾´óĞ¡ÄÚ´æ¿éÁ´Í· */
-	struct memBlock *pTail;        /* Ö¸Ïò±¾´óĞ¡ÄÚ´æ¿éÁ´Î² */
-	void *startArea;               /* ÆôÊ¼ÄÚ´æÇø*/
-	void *endArea;                 /* ½áÊøÄÚ´æÇø*/
-	unsigned int *pBlockState;     /* ¼ÇÂ¼ÄÚ´æ¿é×´Ì¬*/
+	enum memPartition partition;   /* Partition IDå·       */
+	unsigned int totalBlocks;      /* è¯¥PartitionåŒºçš„å—ä¸ªæ•°*/
+	unsigned int size;             /* æ¯ä¸ªå—çš„å¤§å°         */
+	unsigned int totalSize;        /* åˆ†é…åŒºåŸŸå¤§å°*/
+	unsigned int usedBlocks;       /* å·²ä½¿ç”¨çš„å—æ•°*/
+	unsigned int freeBlocks;       /* æœªä½¿ç”¨çš„å—æ•°*/
+	unsigned int badBlocks;        /* å·²å‘ç°çš„æŸåçš„å†…å­˜å—ä¸ªæ•°ï¼Œ*/
+	unsigned int reReleaseBlocks;  /* é‡å¤é‡Šæ”¾çš„å—*/
+	unsigned int unUsedBlocks;     /* ä»æœªä½¿ç”¨çš„å—æ•°*/
+	unsigned int usedTimes;        /* åˆ†é…æ¬¡æ•°*/
+	unsigned int freeTimes;        /* é‡Šæ”¾æ¬¡æ•°*/
+	struct memBlock *pHead;        /* æŒ‡å‘æœ¬å¤§å°å†…å­˜å—é“¾å¤´ */
+	struct memBlock *pTail;        /* æŒ‡å‘æœ¬å¤§å°å†…å­˜å—é“¾å°¾ */
+	void *startArea;               /* å¯å§‹å†…å­˜åŒº*/
+	void *endArea;                 /* ç»“æŸå†…å­˜åŒº*/
+	unsigned int *pBlockState;     /* è®°å½•å†…å­˜å—çŠ¶æ€*/
 };
 
 #define FILE_NAME_LENGTH 256
@@ -117,47 +117,47 @@ struct memControlBlock {
 
 struct memRecord
 {
-	unsigned int taskId;                  /* Ê¹ÓÃÄÚ´æµÄÈÎÎñid*/
-	char file[FILE_NAME_LENGTH];          /* Ê¹ÓÃÄÚ´æµÄÎÄ¼şÃû*/
-	char function[FUNCTION_NAME_LENGTH];  /* Ê¹ÓÃÄÚ´æµÄÈÎÎñÃû*/
-    unsigned int line;                    /* Ê¹ÓÃÄÚ´æµÄº¯Êı*/
-    enum memAction action;                /* Ê¹ÓÃÄÚ´æµÄ¶¯×÷*/
-    enum memState state;                  /* Ê¹ÓÃÄÚ´æµÄ¶¯×÷ºóµÄ×´Ì¬*/
-    enum memErrCode errcode;              /* Ê¹ÓÃÄÚ´æµÄ´íÎó*/
-    /*unsigned int index;*/               /* ÄÚ´æ¿é±àºÅ*/
-    struct memBlock *pMemBlock;           /* ±»Ê¹ÓÃµÄÄÚ´æ¿é*/
-    struct memRecord *pNext;              /* ÓÃÀ´¼ÇÂ¼Î´±»ÊÍ·Å µÄÄÚ´æ*/
+	unsigned int taskId;                  /* ä½¿ç”¨å†…å­˜çš„ä»»åŠ¡id*/
+	char file[FILE_NAME_LENGTH];          /* ä½¿ç”¨å†…å­˜çš„æ–‡ä»¶å*/
+	char function[FUNCTION_NAME_LENGTH];  /* ä½¿ç”¨å†…å­˜çš„ä»»åŠ¡å*/
+    unsigned int line;                    /* ä½¿ç”¨å†…å­˜çš„å‡½æ•°*/
+    enum memAction action;                /* ä½¿ç”¨å†…å­˜çš„åŠ¨ä½œ*/
+    enum memState state;                  /* ä½¿ç”¨å†…å­˜çš„åŠ¨ä½œåçš„çŠ¶æ€*/
+    enum memErrCode errcode;              /* ä½¿ç”¨å†…å­˜çš„é”™è¯¯*/
+    /*unsigned int index;*/               /* å†…å­˜å—ç¼–å·*/
+    struct memBlock *pMemBlock;           /* è¢«ä½¿ç”¨çš„å†…å­˜å—*/
+    struct memRecord *pNext;              /* ç”¨æ¥è®°å½•æœªè¢«é‡Šæ”¾ çš„å†…å­˜*/
 };
 
 
 struct memRecordlCtrlBlock{
-	enum memPartition partition; /* Partition IDºÅ       */
-	unsigned int totalBlocks;    /* Ô¤ÏÈ·ÖÅäµÄ¼ÇÂ¼¿éÊı*/
-	unsigned int recordnum;      /* µ±Ç°¼ÇÂ¼µÄ¿éÊı*/
-	struct memRecord *pHead;     /* ¼ÇÂ¼Í·*/
-	struct memRecord *pTail;     /* ¼ÇÂ¼Î²*/
-	struct memRecord *pCurrent;  /* µ±Ç°¼ÇÂ¼µÄ½Úµã*/
+	enum memPartition partition; /* Partition IDå·       */
+	unsigned int totalBlocks;    /* é¢„å…ˆåˆ†é…çš„è®°å½•å—æ•°*/
+	unsigned int recordnum;      /* å½“å‰è®°å½•çš„å—æ•°*/
+	struct memRecord *pHead;     /* è®°å½•å¤´*/
+	struct memRecord *pTail;     /* è®°å½•å°¾*/
+	struct memRecord *pCurrent;  /* å½“å‰è®°å½•çš„èŠ‚ç‚¹*/
 };
 
 struct memLeakRecord
 {
-	unsigned int taskId;                  /* Ê¹ÓÃÄÚ´æµÄÈÎÎñid*/
-	char file[FILE_NAME_LENGTH];          /* Ê¹ÓÃÄÚ´æµÄÎÄ¼şÃû*/
-	char function[FUNCTION_NAME_LENGTH];  /* Ê¹ÓÃÄÚ´æµÄÈÎÎñÃû*/
-	unsigned int line;                    /* Ê¹ÓÃÄÚ´æµÄº¯Êı*/
-	struct memBlock *pMemBlock;           /* ±»Ê¹ÓÃµÄÄÚ´æ¿é*/
-	struct memLeakRecord *pNext;              /* ÓÃÀ´¼ÇÂ¼Î´±»ÊÍ·Å µÄÄÚ´æ*/
-	struct memLeakRecord *pPrev;              /* ÓÃÀ´¼ÇÂ¼Î´±»ÊÍ·Å µÄÄÚ´æ*/
+	unsigned int taskId;                  /* ä½¿ç”¨å†…å­˜çš„ä»»åŠ¡id*/
+	char file[FILE_NAME_LENGTH];          /* ä½¿ç”¨å†…å­˜çš„æ–‡ä»¶å*/
+	char function[FUNCTION_NAME_LENGTH];  /* ä½¿ç”¨å†…å­˜çš„ä»»åŠ¡å*/
+	unsigned int line;                    /* ä½¿ç”¨å†…å­˜çš„å‡½æ•°*/
+	struct memBlock *pMemBlock;           /* è¢«ä½¿ç”¨çš„å†…å­˜å—*/
+	struct memLeakRecord *pNext;              /* ç”¨æ¥è®°å½•æœªè¢«é‡Šæ”¾ çš„å†…å­˜*/
+	struct memLeakRecord *pPrev;              /* ç”¨æ¥è®°å½•æœªè¢«é‡Šæ”¾ çš„å†…å­˜*/
 };
 
 struct memLeakRecordCtrlBlock
 {
-	enum memPartition partition; /* Partition IDºÅ       */
-	unsigned int totalBlocks;    /* Ô¤ÏÈ·ÖÅäµÄ¼ÇÂ¼¿éÊı*/
-	unsigned int recordnum;      /* µ±Ç°¼ÇÂ¼µÄ¿éÊı*/
-	struct memLeakRecord *pStart;    /* ¼ÇÂ¼¿ªÊ¼µÄÇøÓò*/
-	struct memLeakRecord *pHead;     /* ¼ÇÂ¼Í·*/
-	struct memLeakRecord *pTail;     /* ¼ÇÂ¼Í·*/
+	enum memPartition partition; /* Partition IDå·       */
+	unsigned int totalBlocks;    /* é¢„å…ˆåˆ†é…çš„è®°å½•å—æ•°*/
+	unsigned int recordnum;      /* å½“å‰è®°å½•çš„å—æ•°*/
+	struct memLeakRecord *pStart;    /* è®°å½•å¼€å§‹çš„åŒºåŸŸ*/
+	struct memLeakRecord *pHead;     /* è®°å½•å¤´*/
+	struct memLeakRecord *pTail;     /* è®°å½•å¤´*/
 };
 
 
@@ -169,7 +169,7 @@ void *SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned 
 void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine);
 
 void showMemAll();
-void showMemRecord(unsigned int blockNum,unsigned int num); /*ÏÔÊ¾ÄÚ´æÇø¿éµÄ¼ÇÂ¼*/
+void showMemRecord(unsigned int blockNum,unsigned int num); /*æ˜¾ç¤ºå†…å­˜åŒºå—çš„è®°å½•*/
 void showMemErrRecord(unsigned int num);
 void showMemLeakRecord(unsigned int blcokInex,unsigned int num);
 
@@ -240,7 +240,7 @@ int getIndex(unsigned int size);
 		extern memInstallFlag;\
 		while(memInstallFlag==IN_CHECK_STATUS)\
 		{\
-			/*ÕâÀïĞèÒªÏò¼à¿ØÄ£¿é×¢²á£¬ËµÃ÷ÏµÍ³ÊÇÕı³£µÄ*/\
+			/*è¿™é‡Œéœ€è¦å‘ç›‘æ§æ¨¡å—æ³¨å†Œï¼Œè¯´æ˜ç³»ç»Ÿæ˜¯æ­£å¸¸çš„*/\
 			TASK_DELAY(1);\
 		}\
 		mallocMem=SYS_MemAllocate(size,__FILE__,__FUNCTION__,__LINE__);\
@@ -259,7 +259,7 @@ int getIndex(unsigned int size);
 		extern memInstallFlag;\
 		while(memInstallFlag==IN_CHECK_STATUS)\
 		{\
-			/*ÕâÀïĞèÒªÏò¼à¿ØÄ£¿é×¢²á£¬ËµÃ÷ÏµÍ³ÊÇÕı³£µÄ*/\
+			/*è¿™é‡Œéœ€è¦å‘ç›‘æ§æ¨¡å—æ³¨å†Œï¼Œè¯´æ˜ç³»ç»Ÿæ˜¯æ­£å¸¸çš„*/\
 			TASK_DELAY(1);\
 		}\
 		SYS_MemFree(freeMem,__FILE__,__FUNCTION__,__LINE__);\

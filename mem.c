@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * memory.c
  *
  *  Created on: 2013-6-6
@@ -56,7 +56,7 @@ struct memActionStr globalMemActionStr[]=
 
 
 
-/*ÄÚ´æÁ´µÄÅäÖÃ*/
+/*å†…å­˜é“¾çš„é…ç½®*/
 struct memControlBlock globalMemCtl[] =
 {
 	{ BLOCK_64  , 1000, 64  , 0, 0, 1000, 0, 0, 1000, 0, 0, NULL, NULL, NULL, NULL ,(unsigned int *)NULL},
@@ -69,7 +69,7 @@ struct memControlBlock globalMemCtl[] =
 };
 
 
-/*¼ÇÂ¼Ã¿¸öÄÚ´æ¿éµÄ²Ù×÷*/
+/*è®°å½•æ¯ä¸ªå†…å­˜å—çš„æ“ä½œ*/
 struct memRecordlCtrlBlock globalMemRecord[] =
 {
 	{ BLOCK_64  , 2000, 0, NULL, NULL, NULL },
@@ -79,11 +79,11 @@ struct memRecordlCtrlBlock globalMemRecord[] =
 	{ BLOCK_1024, 2000, 0, NULL, NULL, NULL },
 	{ BLOCK_2048, 2000, 0, NULL, NULL, NULL },
 	{ BLOCK_4096, 2000, 0, NULL, NULL, NULL },
-	{ BLOCK_MAX , 2000, 0, NULL, NULL, NULL },/*¼ÇÂ¼ÄÚ´æ²Ù×÷µÄÒì³£Çé¿ö*/
+	{ BLOCK_MAX , 2000, 0, NULL, NULL, NULL },/*è®°å½•å†…å­˜æ“ä½œçš„å¼‚å¸¸æƒ…å†µ*/
 };
 
 
-/*¼ÇÂ¼Î´ÊÍ·ÅµÄÄÚ´æÁ´*/
+/*è®°å½•æœªé‡Šæ”¾çš„å†…å­˜é“¾*/
 struct memLeakRecordCtrlBlock globalMemLeakRecord[]=
 {
 	{ BLOCK_64  , 1000, 0, NULL, NULL, NULL },
@@ -112,7 +112,7 @@ MEM_LOCK_DEFINE;
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÄÚ´æ³Ø³õÊ¼»¯
+ * å†…å­˜æ± åˆå§‹åŒ–
  *
  */
 
@@ -150,7 +150,7 @@ int SYS_MemSetup(void)
 		tempAddr = beginAddr;
 	}
 
-	/* Ã¿¶ÎÁ´µÄÄÚ´æ¿Õ¼ä  >= starArea,< endArea */
+	/* æ¯æ®µé“¾çš„å†…å­˜ç©ºé—´  >= starArea,< endArea */
 	for (partitionIndex = 0; partitionIndex < BLOCK_MAX; partitionIndex++)
 	{
 		globalMemCtl[partitionIndex].startArea = tempAddr;
@@ -172,7 +172,7 @@ int SYS_MemSetup(void)
 		tempMemBlock->pNext = NULL;
 		globalMemCtl[partitionIndex].pTail = tempMemBlock;
 
-		/*·ÖÅäÒ»¶ÎÄÚ´æÓÃÀ´±£ÁôÃ¿¸öÄÚ´æ¿éµÄ×´Ì¬0ÎªÕı³££¬1ÎªÒì³£*/
+		/*åˆ†é…ä¸€æ®µå†…å­˜ç”¨æ¥ä¿ç•™æ¯ä¸ªå†…å­˜å—çš„çŠ¶æ€0ä¸ºæ­£å¸¸ï¼Œ1ä¸ºå¼‚å¸¸*/
 		globalMemCtl[partitionIndex].pBlockState = malloc(globalMemCtl[partitionIndex].totalSize / sizeof(globalMemCtl[partitionIndex].pBlockState));
 		if(globalMemCtl[partitionIndex].pBlockState == NULL)
 		{
@@ -193,7 +193,7 @@ int SYS_MemSetup(void)
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÓÃÓÚÉèÖÃÎ»µÄÖµ
+ * ç”¨äºè®¾ç½®ä½çš„å€¼
  */
 int BitMap_SetBit(unsigned int* bitAddr, unsigned int index)
 {
@@ -215,7 +215,7 @@ int BitMap_SetBit(unsigned int* bitAddr, unsigned int index)
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- *ÓÃÓÚ»ñÈ¡Î»µÄÖµ
+ *ç”¨äºè·å–ä½çš„å€¼
  */
 int BitMap_GetBitValue(unsigned int* bitAddr, unsigned int index)
 {
@@ -286,7 +286,7 @@ int SYS_MemRecordInit(struct memRecordlCtrlBlock* pMemRecordConfig)
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÄÚ´æ¼ÇÂ¼Ä£¿é³õÊ¼»¯
+ * å†…å­˜è®°å½•æ¨¡å—åˆå§‹åŒ–
  *
  *
  */
@@ -320,7 +320,7 @@ int SYS_MemRecordSetup(void)
 		tempAddr = beginRecordAddr;
 	}
 
-	/* ¼ÇÂ¼²ÉÓÃ»·ĞÎ¶ÓÁĞ*/
+	/* è®°å½•é‡‡ç”¨ç¯å½¢é˜Ÿåˆ—*/
 	for (partitionIndex = 0; partitionIndex <= BLOCK_MAX; partitionIndex++)
 	{
 		globalMemRecord[partitionIndex].pHead = (struct memRecord*) tempAddr;
@@ -401,7 +401,7 @@ int SYS_MemLeakRecordDestory()
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÄÚ´æÏµÍ³³õÊ¼»¯
+ * å†…å­˜ç³»ç»Ÿåˆå§‹åŒ–
  *
  */
 void SYS_MemInit(void)
@@ -417,7 +417,7 @@ void SYS_MemInit(void)
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * »ñÈ¡ÄÚ´æÁ´ÏÂ±ê
+ * è·å–å†…å­˜é“¾ä¸‹æ ‡
  *
  */
 
@@ -436,7 +436,7 @@ int getIndex(unsigned int size)
 	return BLOCK_MAX;
 }
 
-/*¼ÇÂ¼Õı³£²Ù×÷µÄºê£¬°üÀ¨¶¯×÷£¬¶¯×÷½á¹û×´Ì¬£¬ÈÎÎñid,²Ù×÷ÄÚ´æ£¬´úÂëĞĞºÅ£¬´úÂëÎÄ¼şÃû£¬´úÂëÎÄ¼şÃû³¤¶È£¬´úÂëº¯ÊıÃû£¬´úÂëº¯ÊıÃû³¤¶È*/
+/*è®°å½•æ­£å¸¸æ“ä½œçš„å®ï¼ŒåŒ…æ‹¬åŠ¨ä½œï¼ŒåŠ¨ä½œç»“æœçŠ¶æ€ï¼Œä»»åŠ¡id,æ“ä½œå†…å­˜ï¼Œä»£ç è¡Œå·ï¼Œä»£ç æ–‡ä»¶åï¼Œä»£ç æ–‡ä»¶åé•¿åº¦ï¼Œä»£ç å‡½æ•°åï¼Œä»£ç å‡½æ•°åé•¿åº¦*/
 #define RECORD_MEM(_action,_actMem,index,_state,_taskId,_codeLine,_fileName,_funName)\
 {\
 	if(memRecordInstallFlag == ALREADY_INSTALL)\
@@ -466,7 +466,7 @@ int getIndex(unsigned int size)
 	}\
 }
 
-/*¼ÇÂ¼Õı³£²Ù×÷Òì³£Çé¿öµÄºê*/
+/*è®°å½•æ­£å¸¸æ“ä½œå¼‚å¸¸æƒ…å†µçš„å®*/
 #define RECORD_MEM_ERR(_action,_actMem,_state,_errcode,_taskId,_codeLine,_fileName,_funName)\
 {\
 	if(memRecordInstallFlag == ALREADY_INSTALL)\
@@ -573,7 +573,7 @@ int getIndex(unsigned int size)
  *
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
- * ¶ÔÓÚvxworksÏµÍ³£¬Ö»ÄÜÔÚÈÎÎñÉÏÏÂÎÄÖĞµ÷ÓÃ
+ * å¯¹äºvxworksç³»ç»Ÿï¼Œåªèƒ½åœ¨ä»»åŠ¡ä¸Šä¸‹æ–‡ä¸­è°ƒç”¨
  *
  *
  */
@@ -597,14 +597,14 @@ void * SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned
 		index++;
 		if(index >= BLOCK_MAX)
 		{
-			MEM_DEBUG("1 ÄÚ´æ³ØÖĞÃ»ÓĞ¿ÉÓÃÄÚ´æÁË\n",0,0,0,0,0,0);
+			MEM_DEBUG("1 å†…å­˜æ± ä¸­æ²¡æœ‰å¯ç”¨å†…å­˜äº†\n",0,0,0,0,0,0);
 			RECORD_MEM_ERR(MALLOC_ACTION,returnMem,STATE_MAX,NO_ENOUGH_MEMORY,taskId,codeLine,fileName,funName);
 			MEM_UNLOCK();
 			return NULL;
 		}
 	}
 
-	/*´ÓÍ·²¿È¡³öÄÚ´æ*/
+	/*ä»å¤´éƒ¨å–å‡ºå†…å­˜*/
 	if (globalMemCtl[index].pHead!=NULL)
 	{
 		returnMem = globalMemCtl[index].pHead;
@@ -675,7 +675,7 @@ void * SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÄÚ´æÊÍ·Åº¯Êı
+ * å†…å­˜é‡Šæ”¾å‡½æ•°
  *
  */
 void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
@@ -689,10 +689,10 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 	struct memBlock *freeMem = NULL;
 	MEM_LOCK_START();
 
-	/*Èç¹ûµØÖ·²»ÔÚÄÚ´æ³Ø¿Õ¼äÖĞ£¬¼ÇÂ¼Ïà¹ØµÄÒì³£*/
+	/*å¦‚æœåœ°å€ä¸åœ¨å†…å­˜æ± ç©ºé—´ä¸­ï¼Œè®°å½•ç›¸å…³çš„å¼‚å¸¸*/
 	if(addr < globalMemCtl[0].startArea+sizeof(struct memBlock) || addr >= globalMemCtl[BLOCK_MAX-1].endArea)
 	{
-		MEM_DEBUG("5 The release mem %p is not in mem pool£¬start: 0X%p, end: %p\n",addr,globalMemCtl[0].startArea,globalMemCtl[BLOCK_MAX-1].endArea,0,0,0);
+		MEM_DEBUG("5 The release mem %p is not in mem poolï¼Œstart: 0X%p, end: %p\n",addr,globalMemCtl[0].startArea,globalMemCtl[BLOCK_MAX-1].endArea,0,0,0);
 		RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,NOT_RIGHT_REGION_MEMORY,taskId,codeLine,fileName,funName);
 		return;
 	}
@@ -719,13 +719,13 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 
 	MEM_LOCK();
 
-	/*Ğ£ÑéÄÚ´æÍ·²¿¿ØÖÆ¿é*/
+	/*æ ¡éªŒå†…å­˜å¤´éƒ¨æ§åˆ¶å—*/
 
-	/*¼ì²éÄÚ´æÊÇ·ñÔÚÕıÈ·µÄÄÚ´æÁ´ÉÏ*/
+	/*æ£€æŸ¥å†…å­˜æ˜¯å¦åœ¨æ­£ç¡®çš„å†…å­˜é“¾ä¸Š*/
 	if(addr < globalMemCtl[index].startArea || addr >= globalMemCtl[index].endArea)
 	{
-		/*ÓÉÓÚ´ËÄÚ´æµÄ¿ØÖÆ¿éÊı¾İ³ö´í£¬ÕâÀïÖ»×ö±êÊ¶²»×öÄÚ´æ¿é¼ÇÂ¼*/
-		MEM_DEBUG("6 the release mem %p is not in right mem chain£¬start: 0X%p, end: 0X%p\n",addr,globalMemCtl[index].startArea,globalMemCtl[index].endArea,0,0,0);
+		/*ç”±äºæ­¤å†…å­˜çš„æ§åˆ¶å—æ•°æ®å‡ºé”™ï¼Œè¿™é‡Œåªåšæ ‡è¯†ä¸åšå†…å­˜å—è®°å½•*/
+		MEM_DEBUG("6 the release mem %p is not in right mem chainï¼Œstart: 0X%p, end: 0X%p\n",addr,globalMemCtl[index].startArea,globalMemCtl[index].endArea,0,0,0);
 		freeMem->state = BAD_STATE;
 		RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,MEM_REGION_CONFLICT,taskId,codeLine,fileName,funName);
 		MEM_UNLOCK();
@@ -734,7 +734,7 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 	else
 	{
 
-		/*ÄÚ´æ¼ÇÂ¼µÄ·ÖÅä³¤¶È´óÓÚÄÚ´æËùÔÚÁ´µÄ³¤¶È*/
+		/*å†…å­˜è®°å½•çš„åˆ†é…é•¿åº¦å¤§äºå†…å­˜æ‰€åœ¨é“¾çš„é•¿åº¦*/
 		if(freeMem->length > globalMemCtl[index].size)
 		{
 			MEM_DEBUG("the free mem %p legth %d is bigger than size %d\n",freeMem,freeMem->length,globalMemCtl[index].size,0,0,0);
@@ -746,7 +746,7 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 			return;
 		}
 
-		/*¼ì²éÄÚ´æ¿ØÖÆ¿éµÄ¿ØÖÆÖ¸ÕëÊÇ·ñÕıÈ·*/
+		/*æ£€æŸ¥å†…å­˜æ§åˆ¶å—çš„æ§åˆ¶æŒ‡é’ˆæ˜¯å¦æ­£ç¡®*/
 /*
 		if(freeMem->pControlBlock != &globalMemCtl[index])
 		{
@@ -790,7 +790,7 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 		return;
 	}
 
-	/*½«ÊÍ·ÅµÄÄÚ´æÌí¼Óµ½Á´Î²*/
+	/*å°†é‡Šæ”¾çš„å†…å­˜æ·»åŠ åˆ°é“¾å°¾*/
 	freeMem->taskId=0;
 	freeMem->length=0;
 	freeMem->pNext=NULL;
@@ -820,7 +820,7 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÏÔÊ¾ËùÓĞÄÚ´æ¿éĞÅÏ¢
+ * æ˜¾ç¤ºæ‰€æœ‰å†…å­˜å—ä¿¡æ¯
  *
  */
 void showMemAll()
@@ -855,7 +855,7 @@ void showMemAll()
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÏÔÊ¾µ¥¸öÄÚ´æ¿éĞÅÏ¢
+ * æ˜¾ç¤ºå•ä¸ªå†…å­˜å—ä¿¡æ¯
  *
  */
 void showMem(unsigned int blcokInex)
@@ -892,7 +892,7 @@ void showMem(unsigned int blcokInex)
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÏÔÊ¾ÄÚ´æ¼ÇÂ¼ĞÅÏ¢
+ * æ˜¾ç¤ºå†…å­˜è®°å½•ä¿¡æ¯
  *
  */
 void showMemRecord(unsigned int blcokInex,unsigned int num)
@@ -966,7 +966,7 @@ void showMemRecord(unsigned int blcokInex,unsigned int num)
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÏÔÊ¾´íÎóÄÚ´æ¼ÇÂ¼
+ * æ˜¾ç¤ºé”™è¯¯å†…å­˜è®°å½•
  *
  */
 void showMemErrRecord(unsigned int num)
@@ -1036,7 +1036,7 @@ void showMemErrRecord(unsigned int num)
  * To change this generated comment edit the template variable "comment":
  * Window > Preferences > C/C++ > Editor > Templates.
  *
- * ÏÔÊ¾ÄÚ´æ¼ÇÂ¼ĞÅÏ¢
+ * æ˜¾ç¤ºå†…å­˜è®°å½•ä¿¡æ¯
  *
  */
 void showMemLeakRecord(unsigned int blcokInex,unsigned int num)
