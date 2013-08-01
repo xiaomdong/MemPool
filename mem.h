@@ -34,6 +34,8 @@ enum memErrCode{
 	IN_CHECK_STATUS,
 	IN_SHOW_STATUS,
 	CONFIG_ERR,
+    CHECK_SUM_ERR,
+    MEM_BLOCK_ERR,
 	ERR_MAX,
 };
 
@@ -91,6 +93,7 @@ struct memBlock {
 	unsigned int taskId;                   /* 当前使用内存的任务id*/
 	unsigned int length;                   /* 申请的长度*/
 	void *pMemory;                         /* 实际内存地址*/
+    unsigned long checkSum;                /* check sum*/
 };
 
 struct memControlBlock {
@@ -161,12 +164,18 @@ struct memLeakRecordCtrlBlock
 };
 
 
-int SYS_MemSetup(void);
-int SYS_MemRecordSetup(void);
 void SYS_MemInit(void);
 
-void *SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned codeLine);
-void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine);
+int SYS_MemSetup(void);
+int SYS_MemRecordSetup(void);
+int SYS_MemLeakRecordSetup();
+
+int SYS_MemDestory();
+int SYS_MemRecordDestory();
+int SYS_MemLeakRecordDestory();
+
+void* SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned int codeLine);
+void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned int codeLine);
 
 void showMemAll();
 void showMemRecord(unsigned int blockNum,unsigned int num); /*显示内存区块的记录*/

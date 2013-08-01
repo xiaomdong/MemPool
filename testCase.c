@@ -80,6 +80,9 @@ void _showMemErrRecord()
 }
 void quit()
 {
+    SYS_MemDestory();
+    SYS_MemRecordDestory();
+    SYS_MemLeakRecordDestory();
 	exit(0);
 };
 
@@ -104,47 +107,55 @@ void _malloc()
 
 void _memtest(void *p)
 {
-	unsigned int size =*(unsigned int*)p;
-	unsigned int block=*((unsigned int*)p+1);
-	unsigned int times=*((unsigned int*)p+2);
-	/*printf("you input size:%d,block nums:%d,test times:%d\n",size,block,times);*/
+    unsigned int* temp=(unsigned int*)p;
+    unsigned int size =*temp;
+    unsigned int block=*(temp+1);
+    unsigned int times=*(temp+2);
+
+    free(p);
+    /*printf("you input size:%d,block nums:%d,test times:%d\n",size,block,times);*/
 	testmem(size,block,times);
 }
 void memtest()
 {
 	printf("please input the size ,the block nums and the test times you want malloc\n");
-	unsigned int *temp=(unsigned int*)malloc(3);
+    unsigned int *temp=(unsigned int*)malloc(3*sizeof(unsigned int));
 	scanf("%d %d %d",&temp[0],&temp[1] ,&temp[2]);
 	printf("you input size:%d,block nums:%d,test times:%d\n",temp[0],temp[1] ,temp[2]);
 
 	pthread_t t1;
 	pthread_create(&t1,NULL,_memtest,(void*)&temp[0]);
 	pthread_detach(t1);
+
 //	create_pthread_join();
 
 };
 
 void _memLeaktest(void *p)
 {
-	unsigned int size =*(unsigned int*)p;
-	unsigned int block=*((unsigned int*)p+1);
-	unsigned int times=*((unsigned int*)p+2);
+    unsigned int* temp=(unsigned int*)p;
+    unsigned int size =*temp;
+    unsigned int block=*(temp+1);
+    unsigned int times=*(temp+2);
+    free(p);
 	/*printf("you input size:%d,block nums:%d,test times:%d\n",size,block,times);*/
 	testmemLeak(size,block,times);
 }
+
 void memLeaktest()
 {
 	printf("please input the size ,the block nums and the test times you want malloc\n");
-	unsigned int *temp=(unsigned int*)malloc(3);
+    unsigned int *temp=(unsigned int*)malloc(3*sizeof(unsigned int));
 	scanf("%d %d %d",&temp[0],&temp[1] ,&temp[2]);
 	printf("you input size:%d,block nums:%d,test times:%d\n",temp[0],temp[1] ,temp[2]);
 
 	pthread_t t1;
-	pthread_create(&t1,NULL,_memLeaktest,(void*)&temp[0]);
+    pthread_create(&t1,NULL,_memLeaktest,(void*)temp);
 	pthread_detach(t1);
+
 //	create_pthread_join();
 
-};
+}
 
 void help()
 {

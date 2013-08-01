@@ -31,9 +31,11 @@ struct errCodeStr globalErrStr[]=
 	{IN_CHECK_STATUS		  ,    "IN_CHECK_STATUS"},
 	{IN_SHOW_STATUS           ,    "IN_SHOW_STATUS"},
 	{CONFIG_ERR               ,    "CONFIG_ERR"},
+    {CHECK_SUM_ERR            ,    "CHECK_SUM_ERR"},
 	{ERR_MAX                  ,    "ERR_MAX"},
 
 };
+
 
 
 struct memStateStr globalMemStateStr[]=
@@ -106,6 +108,72 @@ unsigned int  memLeakRecordInstallFlag=UNINSTALL;
 
 MEM_LOCK_DEFINE;
 
+
+/*
+ * author xd
+ *
+ * To change this generated comment edit the template variable "comment":
+ * Window > Preferences > C/C++ > Editor > Templates.
+ *
+ * 用于设置位的值
+ */
+int BitMap_SetBit(unsigned int* bitAddr, unsigned int index)
+{
+    unsigned int  _index = index / sizeof(unsigned int*);
+    unsigned int  _pos   = index % sizeof(unsigned int*);
+
+    if (NULL == bitAddr)
+    {
+        return MEM_ERR;
+    }
+    bitAddr[_index] = (1<<_pos);
+    return MEM_OK;
+
+}
+
+/*
+ * author xd
+ *
+ * To change this generated comment edit the template variable "comment":
+ * Window > Preferences > C/C++ > Editor > Templates.
+ *
+ *用于获取位的值
+ */
+int BitMap_GetBitValue(unsigned int* bitAddr, unsigned int index)
+{
+    unsigned int  _index = index / sizeof(unsigned int*);
+    unsigned int  _pos   = index % sizeof(unsigned int*);
+
+    if (NULL == bitAddr)
+    {
+        return MEM_ERR;
+    }
+
+    if((bitAddr[_index] & (1<<_pos)) == 0 )
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+
+}
+
+unsigned long countMemCheckSum(struct memBlock * checkMemBlock)
+{
+    unsigned long checkSum=0;
+    checkSum = (unsigned long)checkMemBlock->index
+            & (unsigned long)checkMemBlock->length
+            & (unsigned long)checkMemBlock->partition
+            & (unsigned long)checkMemBlock->pMemory
+            & (unsigned long)checkMemBlock->pNext
+            & (unsigned long)checkMemBlock->state
+            & (unsigned long)checkMemBlock->taskId;
+    return checkSum;
+}
+
+
 /*
  * author xd
  *
@@ -122,7 +190,7 @@ int SYS_MemSetup(void)
 	unsigned int partitionIndex = 0;
 	unsigned int blockIndex = 0;
 	unsigned int totalSize = 0;
-	unsigned int memHeadSize = sizeof(struct memBlock);
+    unsigned int memBlockSize = sizeof(struct memBlock);
 	struct memBlock *tempMemBlock = NULL;
 	char *tempAddr = NULL;
 
@@ -135,7 +203,7 @@ int SYS_MemSetup(void)
 
 	for (partitionIndex = 0; partitionIndex < BLOCK_MAX; partitionIndex++)
 	{
-		globalMemCtl[partitionIndex].totalSize = (globalMemCtl[partitionIndex].size + memHeadSize) * globalMemCtl[partitionIndex].totalBlocks;
+        globalMemCtl[partitionIndex].totalSize = (globalMemCtl[partitionIndex].size + memBlockSize) * globalMemCtl[partitionIndex].totalBlocks;
 		totalSize += globalMemCtl[partitionIndex].totalSize;
 	}
 
@@ -160,13 +228,13 @@ int SYS_MemSetup(void)
 		for (blockIndex = 0; blockIndex < globalMemCtl[partitionIndex].totalBlocks; blockIndex++)
 		{
 			tempMemBlock = (struct memBlock*) tempAddr;
-			tempMemBlock->pMemory =tempAddr+memHeadSize;
+            tempMemBlock->pMemory =tempAddr+memBlockSize;
 			tempMemBlock->length = 0;
 			tempMemBlock->state = INIT_STATE;
 			tempMemBlock->partition =partitionIndex;
 			tempMemBlock->index = blockIndex;
 			tempMemBlock->taskId = 0;
-			tempAddr = (tempAddr + globalMemCtl[partitionIndex].size + memHeadSize);
+            tempAddr = (tempAddr + globalMemCtl[partitionIndex].size + memBlockSize);
 			tempMemBlock->pNext = (struct memBlock*)tempAddr;
 		}
 		tempMemBlock->pNext = NULL;
@@ -187,61 +255,19 @@ int SYS_MemSetup(void)
 
 }
 
-/*
- * author xd
- *
- * To change this generated comment edit the template variable "comment":
- * Window > Preferences > C/C++ > Editor > Templates.
- *
- * 用于设置位的值
- */
-int BitMap_SetBit(unsigned int* bitAddr, unsigned int index)
+int SYS_MemDestory(void)
 {
-    unsigned int  _index = index / sizeof(unsigned int*);
-    unsigned int  _pos   = index % sizeof(unsigned int*);
-
-    if (NULL == bitAddr)
+    if(memInstallFlag==ALREADY_INSTALL)
     {
-    	return MEM_ERR;
+        free(beginAddr);
+        memInstallFlag=UNINSTALL;
     }
-    bitAddr[_index] = (1<<_pos);
     return MEM_OK;
-
-}
-
-/*
- * author xd
- *
- * To change this generated comment edit the template variable "comment":
- * Window > Preferences > C/C++ > Editor > Templates.
- *
- *用于获取位的值
- */
-int BitMap_GetBitValue(unsigned int* bitAddr, unsigned int index)
-{
-    unsigned int  _index = index / sizeof(unsigned int*);
-    unsigned int  _pos   = index % sizeof(unsigned int*);
-
-    if (NULL == bitAddr)
-    {
-    	return MEM_ERR;
-    }
-
-    if((bitAddr[_index] & (1<<_pos)) == 0 )
-    {
-    	return 0;
-    }
-    else
-    {
-    	return 1;
-    }
-
 }
 
 
 int SYS_MemRecordInit(struct memRecordlCtrlBlock* pMemRecordConfig)
 {
-	unsigned int partitionIndex = 0;
 	unsigned int totalSize = 0;
 	unsigned int memRecordSize = sizeof(struct memRecord);
 	char *tempAddr = NULL;
@@ -421,13 +447,12 @@ void SYS_MemInit(void)
  *
  */
 
-
 int getIndex(unsigned int size)
 {
 	int index=0;
 	for(index=0;index<BLOCK_MAX;index++)
 	{
-		if(size<=globalMemCtl[index].size)
+        if(size <= globalMemCtl[index].size)
 		{
 			return index;
 		}
@@ -436,21 +461,29 @@ int getIndex(unsigned int size)
 	return BLOCK_MAX;
 }
 
+
+#define RECORD_MEM_START(taskId,fileName,funName,codeLine)\
+    TASK_ID_TYPE _taskId= taskId;\
+    char * _fileName    = fileName;\
+    char * _funName     = funName;\
+    unsigned _codeLine  = codeLine;\
+    int _fileNameLength = strlen(fileName);\
+    int _funNameLength  = strlen(funName);\
+    if(_fileNameLength >= FILE_NAME_LENGTH)\
+    {\
+        _fileNameLength=FILE_NAME_LENGTH-1;\
+    }\
+    if(_funNameLength >= FUNCTION_NAME_LENGTH)\
+    {\
+        _funNameLength=FUNCTION_NAME_LENGTH-1;\
+    }
+
+
 /*记录正常操作的宏，包括动作，动作结果状态，任务id,操作内存，代码行号，代码文件名，代码文件名长度，代码函数名，代码函数名长度*/
-#define RECORD_MEM(_action,_actMem,index,_state,_taskId,_codeLine,_fileName,_funName)\
+#define RECORD_MEM(_action,_actMem,index,_state)\
 {\
 	if(memRecordInstallFlag == ALREADY_INSTALL)\
 	{\
-		int _fileNameLength = strlen(_fileName);\
-		int _funNameLength  = strlen(_funName);\
-		if(_fileNameLength >= FILE_NAME_LENGTH)\
-		{\
-			_fileNameLength=FILE_NAME_LENGTH-1;\
-		}\
-		if(_funNameLength >= FUNCTION_NAME_LENGTH)\
-		{\
-			_funNameLength=FUNCTION_NAME_LENGTH-1;\
-		}\
 		globalMemRecord[index].pCurrent->action     = _action;\
 		globalMemRecord[index].pCurrent->state      = _state;\
 		globalMemRecord[index].pCurrent->taskId     = _taskId;\
@@ -467,20 +500,10 @@ int getIndex(unsigned int size)
 }
 
 /*记录正常操作异常情况的宏*/
-#define RECORD_MEM_ERR(_action,_actMem,_state,_errcode,_taskId,_codeLine,_fileName,_funName)\
+#define RECORD_MEM_ERR(_action,_actMem,_state,_errcode)\
 {\
 	if(memRecordInstallFlag == ALREADY_INSTALL)\
 	{\
-		int _fileNameLength = strlen(_fileName);\
-		int _funNameLength  = strlen(_funName);\
-		if(_fileNameLength >= FILE_NAME_LENGTH)\
-		{\
-			_fileNameLength=FILE_NAME_LENGTH-1;\
-		}\
-		if(_funNameLength >= FUNCTION_NAME_LENGTH)\
-		{\
-			_funNameLength=FUNCTION_NAME_LENGTH-1;\
-		}\
 		globalMemRecord[BLOCK_MAX].pCurrent->action     = _action;\
 		globalMemRecord[BLOCK_MAX].pCurrent->state      = _state;\
 		globalMemRecord[BLOCK_MAX].pCurrent->errcode    = _errcode;\
@@ -497,22 +520,10 @@ int getIndex(unsigned int size)
 	}\
 }
 
-#define RECORD_MEM_LEAK_ADD(_actMem,_index,_taskId,_codeLine,_fileName,_funName)\
+#define RECORD_MEM_LEAK_ADD(_actMem,_index)\
 {\
 	if(memRecordInstallFlag == ALREADY_INSTALL)\
 	{\
-		int _fileNameLength = strlen(fileName);\
-		int _funNameLength  = strlen(fileName);\
-		if(_fileNameLength >= FILE_NAME_LENGTH)\
-		{\
-			_fileNameLength=FILE_NAME_LENGTH-1;\
-		}\
-		\
-		if(_funNameLength >= FUNCTION_NAME_LENGTH)\
-		{\
-			_funNameLength=FUNCTION_NAME_LENGTH-1;\
-		}\
-		\
 		if(globalMemLeakRecord[_index].pHead==NULL)\
 		{\
 			globalMemLeakRecord[_index].pHead=&globalMemLeakRecord[_index].pStart[_actMem->index]; \
@@ -577,17 +588,19 @@ int getIndex(unsigned int size)
  *
  *
  */
-void * SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned codeLine)
+void * SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned int codeLine)
 {
-	TASK_ID_TYPE taskId=TASK_ID_SELF();
-	int index = getIndex(size);
-	struct memBlock *returnMem = NULL;
-	MEM_LOCK_START();
+    int index = getIndex(size);
+    struct memBlock *returnMem = NULL;
+    unsigned long memBlockSize = sizeof(struct memBlock);
+    TASK_ID_TYPE taskId= TASK_ID_SELF();
+    RECORD_MEM_START(taskId,fileName,funName,codeLine);
+    MEM_LOCK_START();
 
 	if(index >= BLOCK_MAX)
 	{
 		MEM_DEBUG("can't alloc mem ,because the szie %d is to big\n",size,0,0,0,0,0);
-		RECORD_MEM_ERR(MALLOC_ACTION,returnMem,size,SIZE_TOO_BIG,taskId,codeLine,fileName,funName);
+        RECORD_MEM_ERR(MALLOC_ACTION,returnMem,size,SIZE_TOO_BIG);
 		return NULL;
 	}
 
@@ -597,8 +610,8 @@ void * SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned
 		index++;
 		if(index >= BLOCK_MAX)
 		{
-			MEM_DEBUG("1 内存池中没有可用内存了\n",0,0,0,0,0,0);
-			RECORD_MEM_ERR(MALLOC_ACTION,returnMem,STATE_MAX,NO_ENOUGH_MEMORY,taskId,codeLine,fileName,funName);
+            MEM_DEBUG("1 don't have any memory left\n",0,0,0,0,0,0);
+            RECORD_MEM_ERR(MALLOC_ACTION,returnMem,STATE_MAX,NO_ENOUGH_MEMORY);
 			MEM_UNLOCK();
 			return NULL;
 		}
@@ -608,60 +621,60 @@ void * SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned
 	if (globalMemCtl[index].pHead!=NULL)
 	{
 		returnMem = globalMemCtl[index].pHead;
-		returnMem->length = size;
-
 	}
 	else
 	{
-
-		MEM_DEBUG("2 Can't return in this point,The system maybe wrong,0X%X\n",&globalMemCtl[index].pHead,0,0,0,0,0);
-		RECORD_MEM_ERR(MALLOC_ACTION,returnMem,STATE_MAX,IMPOSSIBLE_ERR,taskId,codeLine,fileName,funName);
-		MEM_UNLOCK();
-		return NULL;
-	}
-
-	switch(returnMem->state)
-	{
-	case INIT_STATE:
-		globalMemCtl[index].unUsedBlocks--;
-		break;
-	case FREE_STATE:
-		break;
-	case MALLOC_STATE:
-		MEM_DEBUG("3 This block is malloced 0X%X\n",returnMem->state,0,0,0,0,0);
-		RECORD_MEM_ERR(MALLOC_ACTION,returnMem,returnMem->state,ALREADY_MALLOC,taskId,codeLine,fileName,funName);
-		globalMemCtl[index].freeBlocks--;
-		globalMemCtl[index].badBlocks++;
-		returnMem->state = BAD_STATE;
-		MEM_UNLOCK();
-		return NULL;
-	default:
-		MEM_DEBUG("4 The state value 0X%X is not right,index%d, mem %p\n",returnMem->state,index,returnMem,0,0,0);
-		RECORD_MEM_ERR(MALLOC_ACTION,returnMem,returnMem->state,IMPOSSIBLE_ERR,taskId,codeLine,fileName,funName);
-		globalMemCtl[index].freeBlocks--;
-		globalMemCtl[index].badBlocks++;
-		returnMem->state = BAD_STATE;
+        MEM_DEBUG("2 Can't return in this point,The system maybe wrong,globalMemCtl[%d].pHead ==NULL\n",index,0,0,0,0,0);
+        RECORD_MEM_ERR(MALLOC_ACTION,returnMem,STATE_MAX,IMPOSSIBLE_ERR);
 		MEM_UNLOCK();
 		return NULL;
 	}
 
 
-    if(globalMemCtl[index].pHead->pNext == NULL)
+    if(returnMem->state == INIT_STATE
+      || returnMem->state == FREE_STATE
+      && returnMem->partition == index
+      && (unsigned long)returnMem->pMemory  == (unsigned long)returnMem + memBlockSize
+      && returnMem->index == ((unsigned long)returnMem - (unsigned long)globalMemCtl[index].startArea ) /(globalMemCtl[index].size + memBlockSize)
+      )
     {
-	    globalMemCtl[index].pTail=NULL;
-	}
-    globalMemCtl[index].pHead = globalMemCtl[index].pHead->pNext;
+        if(globalMemCtl[index].pHead->pNext == NULL)
+        {
+            globalMemCtl[index].pTail=NULL;
+        }
+        globalMemCtl[index].pHead = globalMemCtl[index].pHead->pNext;
 
-	globalMemCtl[index].freeBlocks--;
-	globalMemCtl[index].usedBlocks++;
-	globalMemCtl[index].usedTimes++;
-	returnMem->state = MALLOC_STATE;
-	returnMem->taskId = taskId;
-	returnMem->pNext = NULL;
+        if(returnMem->state == INIT_STATE)
+        {
+            globalMemCtl[index].unUsedBlocks--;
+        }
+        globalMemCtl[index].freeBlocks--;
+        globalMemCtl[index].usedBlocks++;
+        globalMemCtl[index].usedTimes++;
+        returnMem->state  = MALLOC_STATE;
+        returnMem->taskId = taskId;
+        returnMem->pNext  = NULL;
+        returnMem->length = size;
+        returnMem->checkSum=countMemCheckSum(returnMem);
 
+    }
+    else
+    {
+        RECORD_MEM_ERR(MALLOC_ACTION,returnMem,returnMem->state,MEM_BLOCK_ERR);
+        if(globalMemCtl[index].pHead->pNext == NULL)
+        {
+            globalMemCtl[index].pTail=NULL;
+        }
+        globalMemCtl[index].pHead = globalMemCtl[index].pHead->pNext;
+        globalMemCtl[index].freeBlocks--;
+        globalMemCtl[index].badBlocks++;
+        /*returnMem->state = BAD_STATE;*/
+        MEM_UNLOCK();
+        return NULL;
+    }
 
-	RECORD_MEM(MALLOC_ACTION,returnMem,index,MALLOC_STATE,taskId,codeLine,fileName,funName);
-	RECORD_MEM_LEAK_ADD(returnMem,index,taskId,codeLine,fileName,funName);
+    RECORD_MEM(MALLOC_ACTION,returnMem,index,MALLOC_STATE);
+    RECORD_MEM_LEAK_ADD(returnMem,index);
 
 	MEM_UNLOCK();
 
@@ -678,28 +691,36 @@ void * SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned
  * 内存释放函数
  *
  */
-void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
+void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned int codeLine)
 {
-	int index=0;
-	int indexInBlock=0;
-	TASK_ID_TYPE taskId= TASK_ID_SELF();
+    int index=0;
+    int indexInBlock=0;
+    struct memBlock *freeMem = NULL;
+    unsigned long memBlockSize = sizeof(struct memBlock);
+    TASK_ID_TYPE taskId= TASK_ID_SELF();
+    RECORD_MEM_START(taskId,fileName,funName,codeLine);
+    MEM_LOCK_START();
 
-	int fileNameLength = strlen(fileName);
-    int funNameLength = strlen(funName);
-	struct memBlock *freeMem = NULL;
-	MEM_LOCK_START();
 
 	/*如果地址不在内存池空间中，记录相关的异常*/
 	if(addr < globalMemCtl[0].startArea+sizeof(struct memBlock) || addr >= globalMemCtl[BLOCK_MAX-1].endArea)
 	{
 		MEM_DEBUG("5 The release mem %p is not in mem pool，start: 0X%p, end: %p\n",addr,globalMemCtl[0].startArea,globalMemCtl[BLOCK_MAX-1].endArea,0,0,0);
-		RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,NOT_RIGHT_REGION_MEMORY,taskId,codeLine,fileName,funName);
+        RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,NOT_RIGHT_REGION_MEMORY);
 		return;
 	}
 
 	freeMem=(struct memBlock*)((char*)addr - sizeof(struct memBlock));
-	index=freeMem->partition;
 
+    MEM_LOCK();
+    if(freeMem->checkSum != countMemCheckSum(freeMem))
+    {
+        RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,CHECK_SUM_ERR);
+        MEM_UNLOCK();
+        return;
+    }
+
+    index=freeMem->partition;
 	if(index >= BLOCK_MAX)
 	{
 
@@ -713,11 +734,45 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 		/*BitMap_SetBit(globalMemCtl[index].badBlocks,);*/
 		freeMem->state=BAD_STATE;
 		globalMemCtl[index].badBlocks++;
-		RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,CTRL_BLOCK_BREAK,taskId,codeLine,fileName,funName);
+        RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,CTRL_BLOCK_BREAK);
+        MEM_UNLOCK();
 		return;
 	}
 
-	MEM_LOCK();
+    if(freeMem->state == MALLOC_STATE
+      && freeMem->pNext == NULL
+      && (unsigned long)freeMem->pMemory == (unsigned long)freeMem + memBlockSize
+      && (unsigned long)freeMem->pMemory == addr
+      && freeMem->length <= globalMemCtl[index].size
+      && freeMem->index == ((unsigned long)freeMem - (unsigned long)globalMemCtl[index].startArea ) /(globalMemCtl[index].size + memBlockSize)
+      )
+    {
+        /*将释放的内存添加到链尾*/
+        freeMem->taskId=0;
+        freeMem->length=0;
+        freeMem->pNext=NULL;
+        freeMem->state = FREE_STATE;
+        globalMemCtl[index].freeBlocks++;
+        globalMemCtl[index].usedBlocks--;
+        globalMemCtl[index].freeTimes++;
+
+
+        if(globalMemCtl[index].pTail==NULL)
+        {
+            globalMemCtl[index].pHead=freeMem;
+            globalMemCtl[index].pTail = freeMem;
+        }
+        else
+        {
+            globalMemCtl[index].pTail->pNext=freeMem;
+            globalMemCtl[index].pTail = freeMem;
+        }
+
+        RECORD_MEM(FREE_ACTION,freeMem,index,FREE_STATE);
+        RECORD_MEM_LEAK_DEL(freeMem,index);
+        MEM_UNLOCK();
+        return;
+    }
 
 	/*校验内存头部控制块*/
 
@@ -727,7 +782,7 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 		/*由于此内存的控制块数据出错，这里只做标识不做内存块记录*/
 		MEM_DEBUG("6 the release mem %p is not in right mem chain，start: 0X%p, end: 0X%p\n",addr,globalMemCtl[index].startArea,globalMemCtl[index].endArea,0,0,0);
 		freeMem->state = BAD_STATE;
-		RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,MEM_REGION_CONFLICT,taskId,codeLine,fileName,funName);
+        RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,MEM_REGION_CONFLICT);
 		MEM_UNLOCK();
 		return;
 	}
@@ -740,23 +795,11 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 			MEM_DEBUG("the free mem %p legth %d is bigger than size %d\n",freeMem,freeMem->length,globalMemCtl[index].size,0,0,0);
 			freeMem->state = BAD_STATE;
 			globalMemCtl[index].badBlocks++;
-			RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,CONTROL_BLOCK_LENGTH_ERR,taskId,codeLine,fileName,funName);
-/*			RECORD_MEM(FREE_ACTION,freeMem,BAD_STATE,taskId,codeLine,fileName,funName);*/
+            RECORD_MEM_ERR(FREE_ACTION,freeMem,STATE_MAX,CONTROL_BLOCK_LENGTH_ERR);
+/*			RECORD_MEM(FREE_ACTION,freeMem,BAD_STATE);*/
 			MEM_UNLOCK();
 			return;
 		}
-
-		/*检查内存控制块的控制指针是否正确*/
-/*
-		if(freeMem->pControlBlock != &globalMemCtl[index])
-		{
-			freeMem->state = BAD_STATE;
-			globalMemCtl[index].badBlocks++;
-			intUnlock(intKey);
-			RECORD_MEM(BAD_STATE,freeMem,BAD_STATE,taskId,codeLine,fileName,funName);
-			return;
-		}
-*/
 
 	}
 
@@ -766,48 +809,17 @@ void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned codeLine)
 	case INIT_STATE:
 		MEM_DEBUG("7  Init mem block %p ,0X%X ,Can't be released\n",freeMem,freeMem->state,0,0,0,0);
 		globalMemCtl[index].reReleaseBlocks++;
-		RECORD_MEM_ERR(FREE_ACTION,freeMem,INIT_STATE,REMALLOC_STATE,taskId,codeLine,fileName,funName);
-		MEM_UNLOCK();
-		return ;
+        RECORD_MEM_ERR(FREE_ACTION,freeMem,INIT_STATE,REMALLOC_STATE);
 	case FREE_STATE:
 		MEM_DEBUG("8 Free mem block %p , 0X%X ,Can't be released\n",freeMem,freeMem->state,0,0,0,0);
 		globalMemCtl[index].reReleaseBlocks++;
-		RECORD_MEM_ERR(FREE_ACTION,freeMem,FREE_STATE,REMALLOC_STATE,taskId,codeLine,fileName,funName);
-		MEM_UNLOCK();
-		return ;
-	case MALLOC_STATE:
-		globalMemCtl[index].freeBlocks++;
-		globalMemCtl[index].usedBlocks--;
-		globalMemCtl[index].freeTimes++;
-		freeMem->state = FREE_STATE;
-		break;
+        RECORD_MEM_ERR(FREE_ACTION,freeMem,FREE_STATE,REMALLOC_STATE);
 	default:
 		MEM_DEBUG("9 The mem %p state 0X%X is not right\n",freeMem,freeMem->state,0,0,0,0);
-		RECORD_MEM_ERR(FREE_ACTION,freeMem,freeMem->state,STATE_NOT_EXCEPT,taskId,codeLine,fileName,funName);
+        RECORD_MEM_ERR(FREE_ACTION,freeMem,freeMem->state,STATE_NOT_EXCEPT);
 		globalMemCtl[index].badBlocks++;
 		freeMem->state = BAD_STATE;
-		MEM_UNLOCK();
-		return;
 	}
-
-	/*将释放的内存添加到链尾*/
-	freeMem->taskId=0;
-	freeMem->length=0;
-	freeMem->pNext=NULL;
-
-	if(globalMemCtl[index].pTail==NULL)
-	{
-		globalMemCtl[index].pHead=freeMem;
-		globalMemCtl[index].pTail = freeMem;
-	}
-	else
-	{
-		globalMemCtl[index].pTail->pNext=freeMem;
-		globalMemCtl[index].pTail = freeMem;
-	}
-
-	RECORD_MEM(FREE_ACTION,freeMem,index,FREE_STATE,taskId,codeLine,fileName,funName);
-	RECORD_MEM_LEAK_DEL(freeMem,index);
 
 	MEM_UNLOCK();
 	return;
@@ -1072,21 +1084,25 @@ void showMemLeakRecord(unsigned int blcokInex,unsigned int num)
 			globalMemLeakRecord[blcokInex].pTail
 		    );
 
-	tempRecord=globalMemLeakRecord[blcokInex].pHead;
-	for(tempRecord;tempRecord!=NULL;tempRecord=tempRecord->pNext)
-	{
-		printf("memCtlB:%p,memIndex:%d,mem:%p,taskId:0x%x,file:%s,function:%s,line:%d\n",
-				tempRecord->pMemBlock,
-				tempRecord->pMemBlock->index,
-				tempRecord->pMemBlock->pMemory,
-				tempRecord->taskId,
-				tempRecord->file,
-				tempRecord->function,
-				tempRecord->line);
-	}
+    tempRecord=globalMemLeakRecord[blcokInex].pHead;
 
-	memLeakRecordInstallFlag = ALREADY_INSTALL;
-	return;
+    for(tempRecord; tempRecord != NULL && index < num; tempRecord=tempRecord->pNext)
+    {
+
+        index++;
+        printf("index %d,memCtlB:%p,memIndex:%d,mem:%p,taskId:0x%x,file:%s,function:%s,line:%d\n",
+                index,
+                tempRecord->pMemBlock,
+                tempRecord->pMemBlock->index,
+                tempRecord->pMemBlock->pMemory,
+                tempRecord->taskId,
+                tempRecord->file,
+                tempRecord->function,
+                tempRecord->line);
+    }
+
+    memLeakRecordInstallFlag = ALREADY_INSTALL;
+    return;
 }
 
 
