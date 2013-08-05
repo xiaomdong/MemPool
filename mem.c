@@ -469,6 +469,7 @@ int getIndex(unsigned int size)
     unsigned _codeLine  = codeLine;\
     int _fileNameLength = strlen(fileName);\
     int _funNameLength  = strlen(funName);\
+    time_t timeNow      = time(NULL);\
     if(_fileNameLength >= FILE_NAME_LENGTH)\
     {\
         _fileNameLength=FILE_NAME_LENGTH-1;\
@@ -540,6 +541,7 @@ int getIndex(unsigned int size)
 		memset(globalMemLeakRecord[_index].pStart[_actMem->index].function,0,FUNCTION_NAME_LENGTH);\
 		memcpy(globalMemLeakRecord[_index].pStart[_actMem->index].file,_fileName,_fileNameLength);\
 		memcpy(globalMemLeakRecord[_index].pStart[_actMem->index].function,_funName,_funNameLength);\
+        globalMemLeakRecord[_index].pStart[_actMem->index].timeNow = timeNow;\
 		globalMemLeakRecord[_index].pStart[_actMem->index].line=codeLine;\
 		globalMemLeakRecord[_index].pStart[_actMem->index].taskId=_taskId;\
 		globalMemLeakRecord[_index].pStart[_actMem->index].pMemBlock=_actMem;\
@@ -907,7 +909,7 @@ void showMem(unsigned int blcokInex)
  * 显示内存记录信息
  *
  */
-void showMemRecord(unsigned int blcokInex,unsigned int num)
+unsigned int showMemRecord(unsigned int blcokInex,unsigned int num)
 {
 	int index=0;
 	struct memRecord *tempRecord=NULL;
@@ -969,7 +971,7 @@ void showMemRecord(unsigned int blcokInex,unsigned int num)
 	}
 
 	memRecordInstallFlag = ALREADY_INSTALL;
-	return;
+    return  num;
 }
 
 /*
@@ -981,7 +983,7 @@ void showMemRecord(unsigned int blcokInex,unsigned int num)
  * 显示错误内存记录
  *
  */
-void showMemErrRecord(unsigned int num)
+unsigned int showMemErrRecord(unsigned int num)
 {
 	int index=0;
 	struct memRecord *tempRecord=NULL;
@@ -1038,7 +1040,7 @@ void showMemErrRecord(unsigned int num)
 	}
 
 	memRecordInstallFlag=ALREADY_INSTALL;
-	return;
+    return num;
 }
 
 
@@ -1051,7 +1053,7 @@ void showMemErrRecord(unsigned int num)
  * 显示内存记录信息
  *
  */
-void showMemLeakRecord(unsigned int blcokInex,unsigned int num)
+unsigned int showMemLeakRecord(unsigned int blcokInex,unsigned int num)
 {
 	int index=0;
 	struct memLeakRecord *tempRecord=NULL;
@@ -1088,90 +1090,53 @@ void showMemLeakRecord(unsigned int blcokInex,unsigned int num)
 
     for(tempRecord; tempRecord != NULL && index < num; tempRecord=tempRecord->pNext)
     {
-
-        index++;
-        printf("index %d,memCtlB:%p,memIndex:%d,mem:%p,taskId:0x%x,file:%s,function:%s,line:%d\n",
-                index,
+        printf("memCtlB:%p,memIndex:%-8x,mem:%p,taskId:0x%x,file:%s,function:%s,line:%d :%s",
                 tempRecord->pMemBlock,
                 tempRecord->pMemBlock->index,
                 tempRecord->pMemBlock->pMemory,
                 tempRecord->taskId,
                 tempRecord->file,
                 tempRecord->function,
-                tempRecord->line);
+                tempRecord->line,
+                asctime(gmtime(&tempRecord->timeNow))
+               );
     }
 
     memLeakRecordInstallFlag = ALREADY_INSTALL;
-    return;
+    return num;
 }
 
 
-void showMemErrRecord1(unsigned int num)
+unsigned int memLeakAnalyse(unsigned int blcokInex,unsigned int minute)
 {
-	int index=0;
-	struct memRecord *tempRecord=NULL;
-
-	memRecordInstallFlag=IN_SHOW_STATUS;
-
-	if(num > globalMemRecord[BLOCK_MAX].totalBlocks)
-	{
-		printf("num %d is bigger than the size of record %d \n",num,globalMemRecord[BLOCK_MAX].totalBlocks);
-		num = globalMemRecord[BLOCK_MAX].totalBlocks;
-	}
-
-	if(num > globalMemRecord[BLOCK_MAX].recordnum)
-	{
-		num = globalMemRecord[BLOCK_MAX].recordnum;
-	}
-
-	if(globalMemRecord[BLOCK_MAX].recordnum > globalMemRecord[BLOCK_MAX].totalBlocks)
-	{
-		tempRecord=globalMemRecord[BLOCK_MAX].pCurrent++;
-	}
-	else
-	{
-		tempRecord=globalMemRecord[BLOCK_MAX].pHead;
-	}
-
-	printf("ErrBlock ,totalBlocks:%d ,recordNum:%d\n",globalMemRecord[BLOCK_MAX].totalBlocks,globalMemRecord[BLOCK_MAX].recordnum);
-	printf("record:\n");
-	printf("pHead:%p,pTail:%p,pCurrent:%p\n",
-			globalMemRecord[BLOCK_MAX].pHead,
-			globalMemRecord[BLOCK_MAX].pTail,
-			globalMemRecord[BLOCK_MAX].pCurrent
-			);
-
-	for(index=0;index<num;index++)
-	{
-		printf("action:%d,err:%d,state:%d,mem:%p,taskId:0x%x,file:%s,function:%s,line:%d\n",
-				tempRecord->action,
-				tempRecord->errcode,
-				tempRecord->state,
-				tempRecord->pMemBlock,
-				/*tempRecord->index,*/
-				tempRecord->taskId,
-				tempRecord->file,
-				tempRecord->function,
-				tempRecord->line);
-
-		tempRecord++;
-		if(tempRecord>globalMemRecord[BLOCK_MAX].pTail)
-		{
-			tempRecord=globalMemRecord[BLOCK_MAX].pHead;
-		}
-
-	}
-
-	memRecordInstallFlag=ALREADY_INSTALL;
-	return;
-}
-
-
-
-void memAnalyse()
-{
+    int index=0;
+    int seconds= 60*minute;
+    struct memLeakRecord *tempRecord=NULL;
+    time_t timeNow      = time(NULL);\
 	memInstallFlag = IN_CHECK_STATUS;
-
+    tempRecord=globalMemLeakRecord[blcokInex].pHead;
+    printf("You think %d minutes without releasing memory is a memory leak\n",minute);
+    printf("Memory leaks are listed as follows:\n");
+    for(tempRecord; tempRecord != NULL; tempRecord=tempRecord->pNext)
+    {
+        if((timeNow - tempRecord->timeNow)>=seconds)
+        {
+            printf("memCtlB:%p,memIndex:%-8x,mem:%p,taskId:0x%x,file:%s,function:%s,line:%d :%s",
+                    tempRecord->pMemBlock,
+                    tempRecord->pMemBlock->index,
+                    tempRecord->pMemBlock->pMemory,
+                    tempRecord->taskId,
+                    tempRecord->file,
+                    tempRecord->function,
+                    tempRecord->line,
+                    asctime(gmtime(&tempRecord->timeNow))
+                   );
+        }
+        else
+        {
+            break;
+        }
+    }
 	memInstallFlag = ALREADY_INSTALL;
 	return ;
 }

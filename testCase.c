@@ -21,14 +21,14 @@ extern void help();
 extern void _showMemRecord();
 extern void _showMemErrRecord();
 extern void _showMemLeakRecord();
+extern void _memLeakAnalyse();
 extern void _free();
 extern void _malloc();
 //extern void showMemAll();
 
 extern void testmemLeak(unsigned int size,unsigned int num, unsigned int  times);
 extern void testmem(unsigned int size,unsigned int num,unsigned int times);
-extern void showMemRecord(unsigned int blcokInex,unsigned int num);
-extern void showMemLeakRecord(unsigned int blcokInex,unsigned int num);
+
 
 struct sCommand
 {
@@ -49,6 +49,7 @@ struct sCommand testCommand[]=
 	{"memRecord"     ,_showMemRecord     ,"show mem record"},
 	{"memErrRecord"  ,_showMemErrRecord  ,"show mem err record"},
 	{"memLeakRecord" ,_showMemLeakRecord ,"show mem leak record"},
+    {"memLeakAnalyse" ,_memLeakAnalyse   ,"analyse mem leak record"},
 
 };
 
@@ -78,6 +79,16 @@ void _showMemErrRecord()
 	showMemErrRecord(num);
 
 }
+
+void _memLeakAnalyse()
+{
+    unsigned int index=0;
+    unsigned int min=0;
+    printf("please input the block index and minutes\n");
+    scanf("%d %d",&index,&min);
+    memLeakAnalyse(index,min);
+}
+
 void quit()
 {
     SYS_MemDestory();
@@ -285,7 +296,7 @@ void testmemLeak(unsigned int size,unsigned int num, unsigned int  times)
 	unsigned int * addrLog= NULL;
 	int i=0;
 	int flag=0;
-	printf("testmemLeak \n");
+    /*printf("testmemLeak \n");*/
 	while(1)
 	{
 		if(flag==0)
@@ -293,7 +304,7 @@ void testmemLeak(unsigned int size,unsigned int num, unsigned int  times)
 		for(i=0;i<num;i++)
 		{
 			SYS_MALLOC(addrLog,size);
-			printf("size %d addrlog %p\n",size,addrLog);
+            /*printf("size %d addrlog %p\n",size,addrLog);*/
 		}
 		}
 		flag=1;

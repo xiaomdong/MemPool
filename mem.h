@@ -15,6 +15,7 @@
 #define __MINGW__
 #define __MEM_DEBUG__
 
+
 enum memErrCode{
 	SETUP_ERR=0,
 	MEM_ERR,
@@ -120,9 +121,9 @@ struct memControlBlock {
 
 struct memRecord
 {
-	unsigned int taskId;                  /* 使用内存的任务id*/
-	char file[FILE_NAME_LENGTH];          /* 使用内存的文件名*/
-	char function[FUNCTION_NAME_LENGTH];  /* 使用内存的任务名*/
+    unsigned int taskId;                  /* 使用内存的任务id*/
+    char file[FILE_NAME_LENGTH];          /* 使用内存的文件名*/
+    char function[FUNCTION_NAME_LENGTH];  /* 使用内存的任务名*/
     unsigned int line;                    /* 使用内存的函数*/
     enum memAction action;                /* 使用内存的动作*/
     enum memState state;                  /* 使用内存的动作后的状态*/
@@ -134,12 +135,12 @@ struct memRecord
 
 
 struct memRecordlCtrlBlock{
-	enum memPartition partition; /* Partition ID号       */
-	unsigned int totalBlocks;    /* 预先分配的记录块数*/
-	unsigned int recordnum;      /* 当前记录的块数*/
-	struct memRecord *pHead;     /* 记录头*/
-	struct memRecord *pTail;     /* 记录尾*/
-	struct memRecord *pCurrent;  /* 当前记录的节点*/
+    enum memPartition partition;          /* Partition ID号       */
+    unsigned int totalBlocks;             /* 预先分配的记录块数*/
+    unsigned int recordnum;               /* 当前记录的块数*/
+    struct memRecord *pHead;              /* 记录头*/
+    struct memRecord *pTail;              /* 记录尾*/
+    struct memRecord *pCurrent;           /* 当前记录的节点*/
 };
 
 struct memLeakRecord
@@ -149,25 +150,26 @@ struct memLeakRecord
 	char function[FUNCTION_NAME_LENGTH];  /* 使用内存的任务名*/
 	unsigned int line;                    /* 使用内存的函数*/
 	struct memBlock *pMemBlock;           /* 被使用的内存块*/
-	struct memLeakRecord *pNext;              /* 用来记录未被释放 的内存*/
-	struct memLeakRecord *pPrev;              /* 用来记录未被释放 的内存*/
+    time_t timeNow;                       /* 记录申请操作的时间*/
+    struct memLeakRecord *pNext;          /* 用来记录未被释放的内存的上一跳*/
+    struct memLeakRecord *pPrev;          /* 用来记录未被释放的内存的下一跳*/
 };
 
 struct memLeakRecordCtrlBlock
 {
-	enum memPartition partition; /* Partition ID号       */
-	unsigned int totalBlocks;    /* 预先分配的记录块数*/
-	unsigned int recordnum;      /* 当前记录的块数*/
-	struct memLeakRecord *pStart;    /* 记录开始的区域*/
-	struct memLeakRecord *pHead;     /* 记录头*/
-	struct memLeakRecord *pTail;     /* 记录头*/
+    enum memPartition partition;          /* Partition ID号       */
+    unsigned int totalBlocks;             /* 预先分配的记录块数*/
+    unsigned int recordnum;               /* 当前记录的块数*/
+    struct memLeakRecord *pStart;         /* 记录开始的区域*/
+    struct memLeakRecord *pHead;          /* 记录头*/
+    struct memLeakRecord *pTail;          /* 记录头*/
 };
 
 
 void SYS_MemInit(void);
 
 int SYS_MemSetup(void);
-int SYS_MemRecordSetup(void);
+int SYS_MemRecordSetup();
 int SYS_MemLeakRecordSetup();
 
 int SYS_MemDestory();
@@ -178,10 +180,10 @@ void* SYS_MemAllocate(unsigned int size,char * fileName, char* funName,unsigned 
 void SYS_MemFree(void *addr,char * fileName, char* funName,unsigned int codeLine);
 
 void showMemAll();
-void showMemRecord(unsigned int blockNum,unsigned int num); /*显示内存区块的记录*/
-void showMemErrRecord(unsigned int num);
-void showMemLeakRecord(unsigned int blcokInex,unsigned int num);
-
+unsigned int showMemRecord(unsigned int blcokInex,unsigned int num); /*显示内存区块的记录*/
+unsigned int showMemErrRecord(unsigned int num);
+unsigned int showMemLeakRecord(unsigned int blcokInex,unsigned int num);
+unsigned int memLeakAnalyse(unsigned int blcokInex,unsigned int minute);
 int getIndex(unsigned int size);
 
 
