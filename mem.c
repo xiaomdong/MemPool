@@ -1090,6 +1090,7 @@ unsigned int showMemLeakRecord(unsigned int blcokInex,unsigned int num)
 
     for(tempRecord; tempRecord != NULL && index < num; tempRecord=tempRecord->pNext)
     {
+        index++;
         printf("memCtlB:%p,memIndex:%-8x,mem:%p,taskId:0x%x,file:%s,function:%s,line:%d :%s",
                 tempRecord->pMemBlock,
                 tempRecord->pMemBlock->index,
